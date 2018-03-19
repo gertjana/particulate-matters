@@ -66,15 +66,13 @@ void setup() {
   ttn.join(appEui, appKey);
 
   ttn.onMessage(message);
-
-  debugSerial.println(_SS_MAX_RX_BUFF);
 }
 
 void loop() {
   debugSerial.println("-- Measure PM");
     
-  // Prepare array of 19 bytes to send data
-  byte data[19];
+  // Prepare array of 20 bytes to send data
+  byte data[20];
   
   //get PM 2.5 density of particles over 2.5 μm.
   concentrationPM25=getPM(DUST_SENSOR_DIGITAL_PIN_PM25);
@@ -127,17 +125,20 @@ void loop() {
   data[5] = lat.bytes[1];
   data[6] = lat.bytes[2];
   data[7] = lat.bytes[3];
+  
   data[8] = lng.bytes[0];
   data[9] = lng.bytes[1];
   data[10] = lng.bytes[2];
   data[11] = lng.bytes[3];
-  data[12] = gps.date.year();
-  data[13] = gps.date.month();
-  data[14] = gps.date.day();
-  data[15] = gps.time.hour();
-  data[16] = gps.time.minute();
-  data[17] = gps.time.second();
-  data[18] = gps.time.centisecond();
+  
+  data[12] = gps.date.year() >> 8;
+  data[13] = gps.date.year();
+  data[14] = gps.date.month();
+  data[15] = gps.date.day();
+  data[16] = gps.time.hour();
+  data[17] = gps.time.minute();
+  data[18] = gps.time.second();
+  data[19] = gps.time.centisecond();
   
   debugSerial.println("-- Sending...");
   // Send it off
