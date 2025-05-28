@@ -1,6 +1,7 @@
 #include <TheThingsNetwork.h>
-#include "TinyGPS++.h"
+#include <TinyGPSPlus.h>
 #include <SoftwareSerial.h>
+#include "secrets.h"
 
 #define loraSerial Serial1
 #define debugSerial Serial
@@ -8,11 +9,8 @@
 #define DUST_SENSOR_DIGITAL_PIN_PM10  6
 #define DUST_SENSOR_DIGITAL_PIN_PM25  3
 
-// Replace REPLACE_ME with TTN_FP_EU868 or TTN_FP_US915
 #define freqPlan TTN_FP_EU868
 
-const char *appEui = "70B3D57EF0003899";
-const char *appKey = "5F02B508A92A2B6CF839515C63C3692F";
 const int port = 3;
     
 TheThingsNetwork ttn(loraSerial, debugSerial, freqPlan);
