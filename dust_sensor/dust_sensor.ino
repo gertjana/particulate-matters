@@ -82,8 +82,8 @@ void loop() {
   ppmv=(concentrationPM25*0.0283168/100/1000) *  (0.08205*temp)/0.01;
 
   if ((ceil(concentrationPM25) != lastDUSTPM25)&&((long)concentrationPM25>0)) {
-      data[0] = (byte) concentrationPM25; 
-      data[1] = (byte) concentrationPM25 >> 8;
+      data[0] = (byte) concentrationPM25 >> 8;
+      data[1] = (byte) concentrationPM25; 
       lastDUSTPM25 = ceil(concentrationPM25);
   }
 
@@ -99,8 +99,8 @@ void loop() {
   
   if ((ceil(concentrationPM10) != lastDUSTPM10)&&((long)concentrationPM10>0)) {
       //make bytes to send off
-      data[2] = (byte) concentrationPM10; 
-      data[3] = (byte) concentrationPM10 >> 8;
+      data[2] = (byte) concentrationPM10 >> 8;
+      data[3] = (byte) concentrationPM10; 
       lastDUSTPM10 = ceil(concentrationPM10);
   }
 
@@ -119,11 +119,13 @@ void loop() {
   lat.number = gps.location.lat(); 
   lng.number = gps.location.lng(); 
 
+  // reversing data to make little -> bigendian
   data[4] = lat.bytes[0];
   data[5] = lat.bytes[1];
   data[6] = lat.bytes[2];
   data[7] = lat.bytes[3];
   
+  // reversing data to make little -> bigendian
   data[8] = lng.bytes[0];
   data[9] = lng.bytes[1];
   data[10] = lng.bytes[2];
@@ -149,20 +151,7 @@ void loop() {
 
 void message(const byte* payload, int length, int port) {
   debugSerial.println("-- MESSAGE");
-    
-  // Only handle messages of a single byte
-  if (length != 1) {
-    return;
-  }
-    
-  if (payload[0] == 0) {
-    debugSerial.println("LED: off");
-    digitalWrite(LED_BUILTIN, LOW);
-          
-  } else if (payload[0] == 1) {
-    debugSerial.println("LED: on");
-    digitalWrite(LED_BUILTIN, HIGH);
-  }
+  return;
 }
 
 float conversion25(long concentrationPM25) {
