@@ -1,6 +1,10 @@
 #include <TheThingsNetwork.h>
 #include <TinyGPSPlus.h>
 #include <SoftwareSerial.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include <math.h>
+
 #include "secrets.h"
 
 #define loraSerial Serial1
@@ -8,6 +12,9 @@
 
 #define DUST_SENSOR_DIGITAL_PIN_PM10  6
 #define DUST_SENSOR_DIGITAL_PIN_PM25  3
+
+#define ONE_WIRE_BUS_DIGITAL_PIN 12
+
 
 #define freqPlan TTN_FP_EU868
 
@@ -18,14 +25,20 @@ TheThingsNetwork ttn(loraSerial, debugSerial, freqPlan);
 SoftwareSerial gpsSerial(10, 11);
 TinyGPSPlus gps;
 
+OneWire oneWire(ONE_WIRE_BUS_DIGITAL_PIN);
+
+DallasTemperature sensors(&oneWire);
+
 typedef union
 {
  float number;
  uint8_t bytes[4];
 } FLOATUNION_t;
 
+// GPS Values
 FLOATUNION_t lat;
 FLOATUNION_t lng;
+signed int altitude;
 
 //dust sensor variables
 int val = 0;           // variable to store the value coming from the sensor
@@ -41,8 +54,8 @@ unsigned long lowpulseoccupancy = 0;
 float ratio = 0;
 long concentrationPM25 = 0;
 long concentrationPM10 = 0;
-int temp=20; //external temperature, if you can replace this with a DHT11 or better 
-long ppmv;
+uint8_t temp; //external temperature, if you can replace this with a DHT11 or better 
+
 int cnt = 0; 
 
     
@@ -53,7 +66,9 @@ void setup() {
   loraSerial.begin(57600);
   debugSerial.begin(9600);
   gpsSerial.begin(9600);
-     
+
+  sensors.begin();
+
   // Wait a maximum of 10s for Serial Monitor
   while (!debugSerial && millis() < 10000);
 
@@ -67,19 +82,25 @@ void setup() {
 }
 
 void loop() {
+  // Prepare array of 21 bytes to send data
+  byte data[21];
+ 
+  debugSerial.println("-- Measure Temperature");
+  // get temperature
+  sensors.requestTemperatures();
+  temp = round(sensors.getTempCByIndex(0));
+
+  data[20] = temp;
+  debugSerial.print("Temp: ");
+  debugSerial.println(temp);
+
   debugSerial.println("-- Measure PM");
-    
-  // Prepare array of 20 bytes to send data
-  byte data[20];
-  
+
   //get PM 2.5 density of particles over 2.5 μm.
   concentrationPM25=getPM(DUST_SENSOR_DIGITAL_PIN_PM25);
   debugSerial.print("PM25: ");
   debugSerial.println(concentrationPM25);
   debugSerial.print("\n");
-  //ppmv=mg/m3 * (0.08205*Tmp)/Molecular_mass
-  //0.08205   = Universal gas constant in atm·m3/(kmol·K)
-  ppmv=(concentrationPM25*0.0283168/100/1000) *  (0.08205*temp)/0.01;
 
   if ((ceil(concentrationPM25) != lastDUSTPM25)&&((long)concentrationPM25>0)) {
       data[0] = (byte) concentrationPM25 >> 8;
@@ -92,10 +113,6 @@ void loop() {
   debugSerial.print("PM10: ");
   debugSerial.println(concentrationPM10);
   debugSerial.print("\n");
-  //ppmv=mg/m3 * (0.08205*Tmp)/Molecular_mass
-  //0.08205   = Universal gas constant in atm·m3/(kmol·K)
-  
-  ppmv=(concentrationPM10*0.0283168/100/1000) *  (0.08205*temp)/0.01;
   
   if ((ceil(concentrationPM10) != lastDUSTPM10)&&((long)concentrationPM10>0)) {
       //make bytes to send off
@@ -118,27 +135,29 @@ void loop() {
 
   lat.number = gps.location.lat(); 
   lng.number = gps.location.lng(); 
+  altitude = gps.altitude.meters();
 
   // reversing data to make little -> bigendian
-  data[4] = lat.bytes[0];
-  data[5] = lat.bytes[1];
-  data[6] = lat.bytes[2];
-  data[7] = lat.bytes[3];
+  data[4] = lat.bytes[3];
+  data[5] = lat.bytes[2];
+  data[6] = lat.bytes[1];
+  data[7] = lat.bytes[0];
   
   // reversing data to make little -> bigendian
-  data[8] = lng.bytes[0];
-  data[9] = lng.bytes[1];
-  data[10] = lng.bytes[2];
-  data[11] = lng.bytes[3];
+  data[8] = lng.bytes[3];
+  data[9] = lng.bytes[2];
+  data[10] = lng.bytes[1];
+  data[11] = lng.bytes[0];
   
-  data[12] = gps.date.year() >> 8;
-  data[13] = gps.date.year();
-  data[14] = gps.date.month();
-  data[15] = gps.date.day();
-  data[16] = gps.time.hour();
-  data[17] = gps.time.minute();
-  data[18] = gps.time.second();
-  data[19] = gps.time.centisecond();
+  data[12] = altitude;
+
+  data[13] = gps.date.year() >> 8;
+  data[14] = gps.date.year();
+  data[15] = gps.date.month();
+  data[16] = gps.date.day();
+  data[17] = gps.time.hour();
+  data[18] = gps.time.minute();
+  data[19] = gps.time.second();
   
   debugSerial.println("-- Sending...");
   // Send it off
@@ -187,7 +206,7 @@ long getPM(int DUST_SENSOR_DIGITAL_PIN) {
     if ((endtime-starttime) > sampletime_ms)
     {
     ratio = (lowpulseoccupancy-endtime+starttime)/(sampletime_ms*10.0);  // Integer percentage 0=>100
-                long concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62; // using spec sheet curve
+    long concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62; // using spec sheet curve
 //    debugSerial.print("lowpulseoccupancy:");
 //    debugSerial.print(lowpulseoccupancy);
 //    debugSerial.print("\n");
