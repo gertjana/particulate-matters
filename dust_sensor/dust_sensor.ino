@@ -41,8 +41,7 @@ unsigned long lowpulseoccupancy = 0;
 float ratio = 0;
 long concentrationPM25 = 0;
 long concentrationPM10 = 0;
-int temp=20; //external temperature, if you can replace this with a DHT11 or better 
-long ppmv;
+int temp=20; //external temperature, if you can replace this with a DHT11 or DS18B20 
 int cnt = 0; 
 
     
@@ -77,9 +76,6 @@ void loop() {
   debugSerial.print("PM25: ");
   debugSerial.println(concentrationPM25);
   debugSerial.print("\n");
-  //ppmv=mg/m3 * (0.08205*Tmp)/Molecular_mass
-  //0.08205   = Universal gas constant in atm·m3/(kmol·K)
-  ppmv=(concentrationPM25*0.0283168/100/1000) *  (0.08205*temp)/0.01;
 
   if ((ceil(concentrationPM25) != lastDUSTPM25)&&((long)concentrationPM25>0)) {
       data[0] = (byte) concentrationPM25 >> 8;
@@ -92,13 +88,8 @@ void loop() {
   debugSerial.print("PM10: ");
   debugSerial.println(concentrationPM10);
   debugSerial.print("\n");
-  //ppmv=mg/m3 * (0.08205*Tmp)/Molecular_mass
-  //0.08205   = Universal gas constant in atm·m3/(kmol·K)
-  
-  ppmv=(concentrationPM10*0.0283168/100/1000) *  (0.08205*temp)/0.01;
   
   if ((ceil(concentrationPM10) != lastDUSTPM10)&&((long)concentrationPM10>0)) {
-      //make bytes to send off
       data[2] = (byte) concentrationPM10 >> 8;
       data[3] = (byte) concentrationPM10; 
       lastDUSTPM10 = ceil(concentrationPM10);
@@ -131,14 +122,16 @@ void loop() {
   data[10] = lng.bytes[2];
   data[11] = lng.bytes[3];
   
-  data[12] = gps.date.year() >> 8;
-  data[13] = gps.date.year();
-  data[14] = gps.date.month();
-  data[15] = gps.date.day();
-  data[16] = gps.time.hour();
-  data[17] = gps.time.minute();
-  data[18] = gps.time.second();
-  data[19] = gps.time.centisecond();
+  data[12] = gps.altitude.meters();
+
+  data[13] = gps.date.year() >> 8;
+  data[14] = gps.date.year();
+  data[15] = gps.date.month();
+  data[16] = gps.date.day();
+  data[17] = gps.time.hour();
+  data[18] = gps.time.minute();
+  data[19] = gps.time.second();
+
   
   debugSerial.println("-- Sending...");
   // Send it off
@@ -154,26 +147,6 @@ void message(const byte* payload, int length, int port) {
   return;
 }
 
-float conversion25(long concentrationPM25) {
-  double pi = 3.14159;
-  double density = 1.65 * pow (10, 12);
-  double r25 = 0.44 * pow (10, -6);
-  double vol25 = (4/3) * pi * pow (r25, 3);
-  double mass25 = density * vol25;
-  double K = 3531.5;
-  return (concentrationPM25) * K * mass25;
-}
-
-float conversion10(long concentrationPM10) {
-  double pi = 3.14159;
-  double density = 1.65 * pow (10, 12);
-  double r10 = 0.44 * pow (10, -6);
-  double vol10 = (4/3) * pi * pow (r10, 3);
-  double mass10 = density * vol10;
-  double K = 3531.5;
-  return (concentrationPM10) * K * mass10;
-}
-
 long getPM(int DUST_SENSOR_DIGITAL_PIN) {
 
   starttime = millis();
@@ -187,7 +160,7 @@ long getPM(int DUST_SENSOR_DIGITAL_PIN) {
     if ((endtime-starttime) > sampletime_ms)
     {
     ratio = (lowpulseoccupancy-endtime+starttime)/(sampletime_ms*10.0);  // Integer percentage 0=>100
-                long concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62; // using spec sheet curve
+    long concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62; // using spec sheet curve
 //    debugSerial.print("lowpulseoccupancy:");
 //    debugSerial.print(lowpulseoccupancy);
 //    debugSerial.print("\n");
