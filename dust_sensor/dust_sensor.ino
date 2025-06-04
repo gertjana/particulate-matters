@@ -1,8 +1,6 @@
 #include <TheThingsNetwork.h>
 #include <TinyGPSPlus.h>
 #include <SoftwareSerial.h>
-#include <OneWire.h>
-#include <DallasTemperature.h>
 #include <math.h>
 
 #include "secrets.h"
@@ -13,7 +11,6 @@
 #define DUST_SENSOR_DIGITAL_PIN_PM10  6
 #define DUST_SENSOR_DIGITAL_PIN_PM25  3
 
-#define ONE_WIRE_BUS_DIGITAL_PIN 12
 
 
 #define freqPlan TTN_FP_EU868
@@ -24,10 +21,6 @@ TheThingsNetwork ttn(loraSerial, debugSerial, freqPlan);
 
 SoftwareSerial gpsSerial(10, 11);
 TinyGPSPlus gps;
-
-OneWire oneWire(ONE_WIRE_BUS_DIGITAL_PIN);
-
-DallasTemperature sensors(&oneWire);
 
 typedef union
 {
@@ -54,7 +47,6 @@ unsigned long lowpulseoccupancy = 0;
 float ratio = 0;
 long concentrationPM25 = 0;
 long concentrationPM10 = 0;
-uint8_t temp; //external temperature, if you can replace this with a DHT11 or better 
 
 int cnt = 0; 
 
@@ -66,8 +58,6 @@ void setup() {
   loraSerial.begin(57600);
   debugSerial.begin(9600);
   gpsSerial.begin(9600);
-
-  sensors.begin();
 
   // Wait a maximum of 10s for Serial Monitor
   while (!debugSerial && millis() < 10000);
@@ -83,17 +73,8 @@ void setup() {
 
 void loop() {
   // Prepare array of 21 bytes to send data
-  byte data[21];
+  byte data[20];
  
-  debugSerial.println("-- Measure Temperature");
-  // get temperature
-  sensors.requestTemperatures();
-  temp = round(sensors.getTempCByIndex(0));
-
-  data[20] = temp;
-  debugSerial.print("Temp: ");
-  debugSerial.println(temp);
-
   debugSerial.println("-- Measure PM");
 
   //get PM 2.5 density of particles over 2.5 μm.
@@ -173,30 +154,9 @@ void message(const byte* payload, int length, int port) {
   return;
 }
 
-float conversion25(long concentrationPM25) {
-  double pi = 3.14159;
-  double density = 1.65 * pow (10, 12);
-  double r25 = 0.44 * pow (10, -6);
-  double vol25 = (4/3) * pi * pow (r25, 3);
-  double mass25 = density * vol25;
-  double K = 3531.5;
-  return (concentrationPM25) * K * mass25;
-}
-
-float conversion10(long concentrationPM10) {
-  double pi = 3.14159;
-  double density = 1.65 * pow (10, 12);
-  double r10 = 0.44 * pow (10, -6);
-  double vol10 = (4/3) * pi * pow (r10, 3);
-  double mass10 = density * vol10;
-  double K = 3531.5;
-  return (concentrationPM10) * K * mass10;
-}
-
 long getPM(int DUST_SENSOR_DIGITAL_PIN) {
 
   starttime = millis();
-
   while (1) {
   
     duration = pulseIn(DUST_SENSOR_DIGITAL_PIN, LOW);
