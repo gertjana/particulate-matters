@@ -1,7 +1,7 @@
 
 // 20 bytes containing the following data:
-//| 0 | 1 |  2 |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 | 11 | 12  | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20   |
-//| PM25  | PM10    | Latitude          | Longitude         | Alt | Y       | M  | D  | H  | M  | S  | Temp |
+//| 0 | 1 |  2 |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 |
+//| PM25  | PM10    | Latitude          | Longitude         | YY      | M  | D  | H  | m  | S |
 
 function decodeUplink(input) {
   d = input.bytes;  
@@ -19,20 +19,17 @@ function decodeUplink(input) {
   minute = d[18];
   second = d[19];
   
-  timestamp = new Date(Date.UTC(year, month, day, hour, minute, second)).toISOString();
-  
-  temp = d[20];
+  timestamp = new Date(Date.UTC(year, month-1, day, hour, minute, second)).toISOString();
   
   return {
     data: {
-      bytes: toHexString(d),
-      pm25: pm25,
-      pm10: pm10,
+      altitude: altitude,
       latitude: latitude,
       longitude: longitude,
-      altitude: altitude,
-      timestamp: timestamp,
-      temperature: temp
+      bytes: toHexString(d),
+      pm10: pm10,
+      pm25: pm25,
+      timestamp: timestamp
     },
     warnings: [],
     errors: []
