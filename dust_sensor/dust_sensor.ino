@@ -11,11 +11,31 @@
 #define DUST_SENSOR_DIGITAL_PIN_PM10  6
 #define DUST_SENSOR_DIGITAL_PIN_PM25  3
 
-
+#define QUEUE_SIZE 10  // Size of the circular queue
+#define DATA_SIZE 20   // Size of each data packet
 
 #define freqPlan TTN_FP_EU868
 
 const int port = 3;
+unsigned long lastMeasurement = 0;
+const unsigned long MEASURE_INTERVAL = 60000; // Measure every minute
+
+// Circular queue implementation
+struct Queue {
+    byte data[QUEUE_SIZE][DATA_SIZE];
+    int front;
+    int rear;
+    int count;
+};
+
+Queue measurementQueue = {{}, 0, 0, 0};
+
+// Function declarations
+void initQueue();
+bool isQueueFull();
+bool isQueueEmpty();
+bool enqueue(byte* data);
+bool dequeue(byte* data);
     
 TheThingsNetwork ttn(loraSerial, debugSerial, freqPlan);
 
@@ -34,11 +54,8 @@ FLOATUNION_t lng;
 signed int altitude;
 
 //dust sensor variables
-int val = 0;           // variable to store the value coming from the sensor
-float valDUSTPM25 =0.0;
-float lastDUSTPM25 =0.0;
-float valDUSTPM10 =0.0;
-float lastDUSTPM10 =0.0;
+float lastDUSTPM25 = 0.0;
+float lastDUSTPM10 = 0.0;
 unsigned long duration;
 unsigned long starttime;
 unsigned long endtime;
@@ -48,110 +65,170 @@ float ratio = 0;
 long concentrationPM25 = 0;
 long concentrationPM10 = 0;
 
-int cnt = 0; 
+int cnt = 0;
 
-    
 void setup() {
-  pinMode(DUST_SENSOR_DIGITAL_PIN_PM10,INPUT);
-  pinMode(DUST_SENSOR_DIGITAL_PIN_PM25,INPUT);
-  
-  loraSerial.begin(57600);
-  debugSerial.begin(9600);
-  gpsSerial.begin(9600);
+    pinMode(DUST_SENSOR_DIGITAL_PIN_PM10, INPUT);
+    pinMode(DUST_SENSOR_DIGITAL_PIN_PM25, INPUT);
+    
+    loraSerial.begin(57600);
+    debugSerial.begin(9600);
+    gpsSerial.begin(9600);
 
-  // Wait a maximum of 10s for Serial Monitor
-  while (!debugSerial && millis() < 10000);
+    // Wait a maximum of 10s for Serial Monitor
+    while (!debugSerial && millis() < 10000);
 
-  debugSerial.println("-- STATUS");
-  ttn.showStatus();
+    debugSerial.println("-- STATUS");
+    ttn.showStatus();
 
-  debugSerial.println("-- JOIN");
-  ttn.join(appEui, appKey);
+    debugSerial.println("-- JOIN");
+    ttn.join(appEui, appKey);
 
-  ttn.onMessage(message);
+    ttn.onMessage(message);
+    initQueue();
 }
 
 void loop() {
-  // Prepare array of 21 bytes to send data
-  byte data[20];
- 
-  debugSerial.println("-- Measure PM");
+    // Run both tasks in each loop iteration
+    measureTask();
+    sendTask();
+}
 
-  //get PM 2.5 density of particles over 2.5 μm.
-  concentrationPM25=getPM(DUST_SENSOR_DIGITAL_PIN_PM25);
-  debugSerial.print("PM25: ");
-  debugSerial.println(concentrationPM25);
-  debugSerial.print("\n");
+void measureTask() {
+    // Only measure if enough time has passed since last measurement
+    if (millis() - lastMeasurement < MEASURE_INTERVAL) {
+        return;
+    }
 
-  if ((ceil(concentrationPM25) != lastDUSTPM25)&&((long)concentrationPM25>0)) {
-      data[0] = (byte) concentrationPM25 >> 8;
-      data[1] = (byte) concentrationPM25; 
-      lastDUSTPM25 = ceil(concentrationPM25);
-  }
+    byte newData[DATA_SIZE] = {0};
+    
+    debugSerial.println("-- Measure PM");
 
-  //get PM 1.0 - density of particles over 1 μm.
-  concentrationPM10=getPM(DUST_SENSOR_DIGITAL_PIN_PM10);
-  debugSerial.print("PM10: ");
-  debugSerial.println(concentrationPM10);
-  debugSerial.print("\n");
-  
-  if ((ceil(concentrationPM10) != lastDUSTPM10)&&((long)concentrationPM10>0)) {
-      //make bytes to send off
-      data[2] = (byte) concentrationPM10 >> 8;
-      data[3] = (byte) concentrationPM10; 
-      lastDUSTPM10 = ceil(concentrationPM10);
-  }
+    //get PM 2.5 density
+    concentrationPM25 = getPM(DUST_SENSOR_DIGITAL_PIN_PM25);
+    debugSerial.print("PM25: ");
+    debugSerial.println(concentrationPM25);
 
-  debugSerial.println("-- GPS");
+    if ((ceil(concentrationPM25) != lastDUSTPM25) && ((long)concentrationPM25 > 0)) {
+        newData[0] = (byte)(concentrationPM25 >> 8);
+        newData[1] = (byte)concentrationPM25;
+        lastDUSTPM25 = ceil(concentrationPM25);
+    }
 
-  while(gpsSerial.available()) {
-    char c = gpsSerial.read();
-    debugSerial.write(c);
-    gps.encode(c);
-  }
-  debugSerial.println("");
-  debugSerial.print("LAT=");  debugSerial.println(gps.location.lat(), 6);
-  debugSerial.print("LONG="); debugSerial.println(gps.location.lng(), 6);
-  debugSerial.print("ALT=");  debugSerial.println(gps.altitude.meters());
+    //get PM 10 density
+    concentrationPM10 = getPM(DUST_SENSOR_DIGITAL_PIN_PM10);
+    debugSerial.print("PM10: ");
+    debugSerial.println(concentrationPM10);
+    
+    if ((ceil(concentrationPM10) != lastDUSTPM10) && ((long)concentrationPM10 > 0)) {
+        newData[2] = (byte)(concentrationPM10 >> 8);
+        newData[3] = (byte)concentrationPM10;
+        lastDUSTPM10 = ceil(concentrationPM10);
+    }
 
-  lat.number = gps.location.lat(); 
-  lng.number = gps.location.lng(); 
-  altitude = gps.altitude.meters();
+    // Get GPS data
+    while (gpsSerial.available()) {
+        gps.encode(gpsSerial.read());
+    }
 
-  // reversing data to make little -> bigendian
-  data[4] = lat.bytes[3];
-  data[5] = lat.bytes[2];
-  data[6] = lat.bytes[1];
-  data[7] = lat.bytes[0];
-  
-  // reversing data to make little -> bigendian
-  data[8] = lng.bytes[3];
-  data[9] = lng.bytes[2];
-  data[10] = lng.bytes[1];
-  data[11] = lng.bytes[0];
-  
-  data[12] = altitude;
+    lat.number = gps.location.lat();
+    lng.number = gps.location.lng();
+    altitude = gps.altitude.meters();
 
-  data[13] = gps.date.year() >> 8;
-  data[14] = gps.date.year();
-  data[15] = gps.date.month();
-  data[16] = gps.date.day();
-  data[17] = gps.time.hour();
-  data[18] = gps.time.minute();
-  data[19] = gps.time.second();
-  
-  debugSerial.println("-- Sending...");
-  // Send it off
-  if (ttn.sendBytes(data, sizeof(data), port) == TTN_SUCCESSFUL_TRANSMISSION) {
-    cnt = 0;    
-  } else {
-    cnt = cnt + 1;
-  }
+    // Pack GPS data
+    newData[4] = lat.bytes[3];
+    newData[5] = lat.bytes[2];
+    newData[6] = lat.bytes[1];
+    newData[7] = lat.bytes[0];
+    
+    newData[8] = lng.bytes[3];
+    newData[9] = lng.bytes[2];
+    newData[10] = lng.bytes[1];
+    newData[11] = lng.bytes[0];
+    
+    newData[12] = altitude;
+
+    newData[13] = gps.date.year() >> 8;
+    newData[14] = gps.date.year();
+    newData[15] = gps.date.month();
+    newData[16] = gps.date.day();
+    newData[17] = gps.time.hour();
+    newData[18] = gps.time.minute();
+    newData[19] = gps.time.second();
+
+    // Add to queue
+    if (enqueue(newData)) {
+        debugSerial.println("Measurement added to queue");
+    } else {
+        debugSerial.println("Queue full - measurement dropped");
+    }
+
+    lastMeasurement = millis();
+}
+
+void sendTask() {
+    if (isQueueEmpty()) {
+        return;  // Nothing to send
+    }
+
+    byte dataToSend[DATA_SIZE];
+    
+    // Peek at the front of the queue (don't remove yet)
+    memcpy(dataToSend, measurementQueue.data[measurementQueue.front], DATA_SIZE);
+    
+    debugSerial.println("-- Sending...");
+    if (ttn.sendBytes(dataToSend, DATA_SIZE, port) == TTN_SUCCESSFUL_TRANSMISSION) {
+        // Only remove from queue if transmission was successful
+        byte dummy[DATA_SIZE];
+        dequeue(dummy);  // Remove the sent data from queue
+        debugSerial.println("Transmission successful - removed from queue");
+        cnt = 0;
+    } else {
+        debugSerial.println("Transmission failed - keeping in queue");
+        cnt++;
+    }
+}
+
+// Queue management functions
+void initQueue() {
+    measurementQueue.front = 0;
+    measurementQueue.rear = 0;
+    measurementQueue.count = 0;
+}
+
+bool isQueueFull() {
+    return measurementQueue.count >= QUEUE_SIZE;
+}
+
+bool isQueueEmpty() {
+    return measurementQueue.count == 0;
+}
+
+bool enqueue(byte* data) {
+    if (isQueueFull()) {
+        return false;
+    }
+    
+    memcpy(measurementQueue.data[measurementQueue.rear], data, DATA_SIZE);
+    measurementQueue.rear = (measurementQueue.rear + 1) % QUEUE_SIZE;
+    measurementQueue.count++;
+    return true;
+}
+
+bool dequeue(byte* data) {
+    if (isQueueEmpty()) {
+        return false;
+    }
+    
+    memcpy(data, measurementQueue.data[measurementQueue.front], DATA_SIZE);
+    measurementQueue.front = (measurementQueue.front + 1) % QUEUE_SIZE;
+    measurementQueue.count--;
+    return true;
 }
 
 void message(const byte* payload, int length, int port) {
-  debugSerial.println("-- MESSAGE");
-  return;
+    debugSerial.println("-- MESSAGE");
+    return;
 }
 
 long getPM(int DUST_SENSOR_DIGITAL_PIN) {
