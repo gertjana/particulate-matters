@@ -1,7 +1,7 @@
 
 // 20 bytes containing the following data:
-//| 0 | 1 |  2 |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 |
-//| PM25  | PM10    | Latitude          | Longitude         | YY      | M  | D  | H  | m  | S |
+//| 0 | 1 |  2 |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 | 11 | 12  | 13 | 14 | 15 | 16 | 17 | 18 | 19 |
+//| PM25  | PM10    | Latitude          | Longitude         | Alt | Year    | M  | D  | H  | M  | S  |
 
 function decodeUplink(input) {
   d = input.bytes;  
@@ -24,9 +24,9 @@ function decodeUplink(input) {
   return {
     data: {
       altitude: altitude,
+      bytes: toHexString(d),
       latitude: latitude,
       longitude: longitude,
-      bytes: toHexString(d),
       pm10: pm10,
       pm25: pm25,
       timestamp: timestamp
