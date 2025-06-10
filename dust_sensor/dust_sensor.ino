@@ -89,44 +89,39 @@ void setup() {
 }
 
 void loop() {
-    // Run both tasks in each loop iteration
     measureTask();
     sendTask();
 }
 
 void measureTask() {
-    // Only measure if enough time has passed since last measurement
     if (millis() - lastMeasurement < MEASURE_INTERVAL) {
         return;
     }
 
-    byte newData[DATA_SIZE] = {0};
+    byte data[DATA_SIZE] = {0};
     
     debugSerial.println("-- Measure PM");
 
-    //get PM 2.5 density
     concentrationPM25 = getPM(DUST_SENSOR_DIGITAL_PIN_PM25);
     debugSerial.print("PM25: ");
     debugSerial.println(concentrationPM25);
 
     if ((ceil(concentrationPM25) != lastDUSTPM25) && ((long)concentrationPM25 > 0)) {
-        newData[0] = (byte)(concentrationPM25 >> 8);
-        newData[1] = (byte)concentrationPM25;
+        data[0] = (byte)(concentrationPM25 >> 8);
+        data[1] = (byte)concentrationPM25;
         lastDUSTPM25 = ceil(concentrationPM25);
     }
 
-    //get PM 10 density
     concentrationPM10 = getPM(DUST_SENSOR_DIGITAL_PIN_PM10);
     debugSerial.print("PM10: ");
     debugSerial.println(concentrationPM10);
     
     if ((ceil(concentrationPM10) != lastDUSTPM10) && ((long)concentrationPM10 > 0)) {
-        newData[2] = (byte)(concentrationPM10 >> 8);
-        newData[3] = (byte)concentrationPM10;
+        data[2] = (byte)(concentrationPM10 >> 8);
+        data[3] = (byte)concentrationPM10;
         lastDUSTPM10 = ceil(concentrationPM10);
     }
 
-    // Get GPS data
     while (gpsSerial.available()) {
         gps.encode(gpsSerial.read());
     }
@@ -135,29 +130,27 @@ void measureTask() {
     lng.number = gps.location.lng();
     altitude = gps.altitude.meters();
 
-    // Pack GPS data
-    newData[4] = lat.bytes[3];
-    newData[5] = lat.bytes[2];
-    newData[6] = lat.bytes[1];
-    newData[7] = lat.bytes[0];
+    data[4] = lat.bytes[3];
+    data[5] = lat.bytes[2];
+    data[6] = lat.bytes[1];
+    data[7] = lat.bytes[0];
     
-    newData[8] = lng.bytes[3];
-    newData[9] = lng.bytes[2];
-    newData[10] = lng.bytes[1];
-    newData[11] = lng.bytes[0];
+    data[8] = lng.bytes[3];
+    data[9] = lng.bytes[2];
+    data[10] = lng.bytes[1];
+    data[11] = lng.bytes[0];
     
-    newData[12] = altitude;
+    data[12] = altitude;
 
-    newData[13] = gps.date.year() >> 8;
-    newData[14] = gps.date.year();
-    newData[15] = gps.date.month();
-    newData[16] = gps.date.day();
-    newData[17] = gps.time.hour();
-    newData[18] = gps.time.minute();
-    newData[19] = gps.time.second();
+    data[13] = gps.date.year() >> 8;
+    data[14] = gps.date.year();
+    data[15] = gps.date.month();
+    data[16] = gps.date.day();
+    data[17] = gps.time.hour();
+    data[18] = gps.time.minute();
+    data[19] = gps.time.second();
 
-    // Add to queue
-    if (enqueue(newData)) {
+    if (enqueue(data)) {
         debugSerial.println("Measurement added to queue");
     } else {
         debugSerial.println("Queue full - measurement dropped");
@@ -173,23 +166,19 @@ void sendTask() {
 
     byte dataToSend[DATA_SIZE];
     
-    // Peek at the front of the queue (don't remove yet)
     memcpy(dataToSend, measurementQueue.data[measurementQueue.front], DATA_SIZE);
     
     debugSerial.println("-- Sending...");
     if (ttn.sendBytes(dataToSend, DATA_SIZE, port) == TTN_SUCCESSFUL_TRANSMISSION) {
-        // Only remove from queue if transmission was successful
         byte dummy[DATA_SIZE];
-        dequeue(dummy);  // Remove the sent data from queue
-        debugSerial.println("Transmission successful - removed from queue");
+        dequeue(dummy);
         cnt = 0;
     } else {
-        debugSerial.println("Transmission failed - keeping in queue");
+        debugSerial.println("Transmission failed - keeping message in queue");
         cnt++;
     }
 }
 
-// Queue management functions
 void initQueue() {
     measurementQueue.front = 0;
     measurementQueue.rear = 0;
@@ -244,15 +233,7 @@ long getPM(int DUST_SENSOR_DIGITAL_PIN) {
     {
     ratio = (lowpulseoccupancy-endtime+starttime)/(sampletime_ms*10.0);  // Integer percentage 0=>100
     long concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62; // using spec sheet curve
-//    debugSerial.print("lowpulseoccupancy:");
-//    debugSerial.print(lowpulseoccupancy);
-//    debugSerial.print("\n");
-//    debugSerial.print("ratio:");
-//    debugSerial.print(ratio);
-//    debugSerial.print("\n");
-//    debugSerial.print("PPDNS42:");
-//    debugSerial.println(concentration);
-//    debugSerial.print("\n");
+
     
     lowpulseoccupancy = 0;
     return(concentration);    
