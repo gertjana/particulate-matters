@@ -100,7 +100,7 @@ void measureTask() {
         return;
     }
 
-    byte newData[DATA_SIZE];
+    byte newData[DATA_SIZE] = {0};
     
     debugSerial.println("-- Measure PM");
 
