@@ -58,6 +58,10 @@ This project is a mobile air quality monitoring system designed to be mounted on
 
 See [`example.md`](example.md) for a sample data packet and its decoded output.
 
+## Heatmap
+
+For setting up and using the heatmap visualization, see [heatmap/README.md](heatmap/README.md)
+
 ## License
 
 MIT License
