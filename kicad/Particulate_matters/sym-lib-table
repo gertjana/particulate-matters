@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "ParticulateMatters")(type "KiCad")(uri "${KIPRJMOD}/ParticulateMatters.kicad_sym")(options "")(descr ""))
+)
