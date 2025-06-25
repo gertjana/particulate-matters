@@ -6,9 +6,7 @@ This project is a mobile air quality monitoring system designed to be mounted on
 
 - **Real-time air quality monitoring:** Measures PM2.5 and PM10 concentrations using a dust sensor.
 - **GPS tracking:** Captures latitude, longitude, altitude, and timestamp for each measurement.
-- **LoRaWAN connectivity:** Sends data packets to TTN for remote collection and analysis.
-- **Data buffering:** Uses a queue to ensure no measurements are lost if transmission is temporarily unavailable.
-- **Open hardware:** Designed for Arduino Leonardo (ATmega32u4) with easy-to-source components.
+- **LoRaWAN connectivity:** Sends this information to TTN for remote collection and analysis.
 
 ## Hardware Requirements
 
@@ -17,6 +15,26 @@ This project is a mobile air quality monitoring system designed to be mounted on
 - GPS module (compatible with TinyGPS++)
 - Battery pack
 - Bicycle mounting hardware
+
+## Diagram
+
+```asciiflow
+  ┌────────────┐    ┌───────────┐                                               
+  │Dustsensor  │    │Things UNO │                                   
+  │            │    │           │                                               
+  │- PM10      │    │           │ \|/       \|/                                      
+  │- PM25      ┼───►|           │  │  Radio  │  ┌─────────┐   ┌─────────┐   ┌────────────┐         
+  │            │    │           │  │         │  │TTN      │   │TTN      │   │ TTN        │         
+  │            │    │     Bytes │──┘         └──│Gateways ├──►│Console  ├──►| Decoder    │─┐         
+  └────────────┘    │           │               │         │   │         │   │ -> Json    │ │
+  ┌────────────┐    │           │               └─────────┘   └─────────┘   └────────────┘ │
+  │GPS         │    │           │                         ┌────────────────────────────────┘
+  │            │    │           │                         │   ┌─────────┐ 
+  │Lat/Long    ┼───►|           │                         │   │TTN      │ 
+  │Timestamp   │    │           │                         └──►│Storage  │──► to visualizations 
+  │            │    │           │                             │         │    f.i. heatmaps
+  └────────────┘    └───────────┘                             └─────────┘ 
+```
 
 ## How It Works
 
@@ -58,7 +76,7 @@ This project is a mobile air quality monitoring system designed to be mounted on
 
 See [`example.md`](example.md) for a sample data packet and its decoded output.
 
-## Heatmap
+## Heatmaps
 
 For setting up and using the heatmap visualization, see [heatmap/README.md](heatmap/README.md)
 
@@ -69,3 +87,6 @@ MIT License
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request.
+
+
+

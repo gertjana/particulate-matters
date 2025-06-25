@@ -2,6 +2,7 @@ import json
 import folium
 from folium import plugins
 from datetime import datetime
+from collections import defaultdict
 
 def load_data(filename):
     with open(filename, 'r') as file:
@@ -67,6 +68,53 @@ def create_heatmap(points, title):
     
     heatmap.add_to(m)
     
+    # Group nearby points (less than 10 meters apart)
+    proximity_threshold = 0.0001  # roughly 10 meters in decimal degrees
+    point_clusters = defaultdict(list)
+    
+    for lat, lon, measurement in points:
+        # Round coordinates to group nearby points
+        cluster_key = (round(lat / proximity_threshold) * proximity_threshold, 
+                       round(lon / proximity_threshold) * proximity_threshold)
+        point_clusters[cluster_key].append((lat, lon, measurement))
+    
+    # Add markers for each measurement or cluster
+    for cluster_key, cluster_points in point_clusters.items():
+        avg_lat = sum(p[0] for p in cluster_points) / len(cluster_points)
+        avg_lon = sum(p[1] for p in cluster_points) / len(cluster_points)
+        
+        if len(cluster_points) == 1:
+            # Single point - just add a black dot
+            folium.CircleMarker(
+                location=[avg_lat, avg_lon],
+                radius=3,
+                color='black',
+                fill=True,
+                fill_color='black',
+                fill_opacity=1
+            ).add_to(m)
+        else:
+            # Multiple points close together - add a numbered marker
+            folium.CircleMarker(
+                location=[avg_lat, avg_lon],
+                radius=10,
+                color='black',
+                fill=True,
+                fill_color='white',
+                fill_opacity=0.8,
+                tooltip=f"{len(cluster_points)} measurements"
+            ).add_to(m)
+            
+            # Add the number as text
+            folium.map.Marker(
+                [avg_lat, avg_lon],
+                icon=folium.DivIcon(
+                    icon_size=(20, 20),
+                    icon_anchor=(10, 10),
+                    html=f'<div style="font-size: 10pt; color: black; text-align: center; font-weight: bold;">{len(cluster_points)}</div>'
+                )
+            ).add_to(m)
+    
     # Create legend
     legend_html = f'''
         <div style="position: fixed; 
@@ -81,6 +129,8 @@ def create_heatmap(points, title):
             <div><i style="background: yellow; display: inline-block; width: 15px; height: 15px;"></i> {int(max_val * 0.65)} - {int(max_val * 0.8)} μg/m³</div>
             <div><i style="background: lime; display: inline-block; width: 15px; height: 15px;"></i> {int(max_val * 0.4)} - {int(max_val * 0.65)} μg/m³</div>
             <div><i style="background: blue; display: inline-block; width: 15px; height: 15px;"></i> {int(min_val)} - {int(max_val * 0.4)} μg/m³</div>
+            <div><i style="background: black; display: inline-block; width: 15px; height: 15px; border-radius: 50%;"></i> Measurement location</div>
+            <div><i style="background: white; display: inline-block; width: 15px; height: 15px; border: 1px solid black; border-radius: 50%; text-align: center; font-size: 10px;">n</i> n measurements in same area</div>
             <hr style="margin: 5px 0;">
             <div>Range: {int(min_val)} - {int(max_val)} μg/m³</div>
             <div>Samples: {len(points)}</div>
@@ -92,7 +142,7 @@ def create_heatmap(points, title):
 
 def main():
     # Load and process data
-    data = load_data('stored_messages_1749107126987.json')
+    data = load_data('stored_messages.json')
     points_pm10, points_pm25 = extract_coordinates_and_measurements(data)
     
     # Create heatmaps
