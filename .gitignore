@@ -1,1 +1,4 @@
 secrets.h
+heatmap/bin/
+heatmap/lib
+heatmap/pyvenv.cfg
