@@ -422,7 +422,7 @@
 					)
 				)
 			)
-			(pin power_in line
+			(pin passive line
 				(at -2.54 -2.54 0)
 				(length 2.54)
 				(name "GND"
@@ -440,7 +440,7 @@
 					)
 				)
 			)
-			(pin output line
+			(pin passive line
 				(at -2.54 -6.35 0)
 				(length 2.54)
 				(name "MISO"
@@ -458,7 +458,7 @@
 					)
 				)
 			)
-			(pin input line
+			(pin passive line
 				(at -2.54 -10.16 0)
 				(length 2.54)
 				(name "CLK"
@@ -476,7 +476,7 @@
 					)
 				)
 			)
-			(pin input line
+			(pin passive line
 				(at -2.54 -13.97 0)
 				(length 2.54)
 				(name "MOSI"
@@ -494,7 +494,7 @@
 					)
 				)
 			)
-			(pin input line
+			(pin passive line
 				(at -2.54 -17.78 0)
 				(length 2.54)
 				(name "CS"
@@ -512,7 +512,7 @@
 					)
 				)
 			)
-			(pin power_in line
+			(pin passive line
 				(at -2.54 -21.59 0)
 				(length 2.54)
 				(name "3V3"

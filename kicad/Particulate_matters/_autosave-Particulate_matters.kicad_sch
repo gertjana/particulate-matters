@@ -536,6 +536,150 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "ParticulateMatters:SSD1306_128x32_0.91"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at 1.016 1.27 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "SSD1306_128x32_0.91_0_1"
+				(rectangle
+					(start 0 0)
+					(end 62.23 -20.32)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "SSD1306_128x32_0.91_1_1"
+				(text "SSD1306 128x32 0.91\""
+					(at 50.546 1.524 0)
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(pin passive line
+					(at 64.77 -3.81 180)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 64.77 -7.62 180)
+					(length 2.54)
+					(name "VCC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 64.77 -11.43 180)
+					(length 2.54)
+					(name "SCK"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 64.77 -15.24 180)
+					(length 2.54)
+					(name "SDA"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "Seeed_Studio_XIAO_Series:XIAO-ESP32-S3-DIP"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -1366,6 +1510,18 @@
 			(embedded_fonts no)
 		)
 	)
+	(junction
+		(at 104.14 99.06)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "c42207d9-d041-4664-a58f-aafcb976527c")
+	)
+	(junction
+		(at 101.6 95.25)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "d898a825-0d75-4b7f-841b-f4f6cc877bb4")
+	)
 	(wire
 		(pts
 			(xy 104.14 99.06) (xy 83.82 99.06)
@@ -1385,6 +1541,16 @@
 			(type default)
 		)
 		(uuid "1f5d760e-33f9-4b58-bbe1-fa8d1bb992c5")
+	)
+	(wire
+		(pts
+			(xy 161.29 111.76) (xy 101.6 111.76)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "22924ebd-08a2-4276-87e0-167f34eed1d7")
 	)
 	(wire
 		(pts
@@ -1458,6 +1624,26 @@
 	)
 	(wire
 		(pts
+			(xy 153.67 100.33) (xy 161.29 100.33)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5e18db16-dd8b-4c77-b497-161fde9bd813")
+	)
+	(wire
+		(pts
+			(xy 153.67 104.14) (xy 161.29 104.14)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5e243a3a-c742-4937-9ae0-6e5d826e1845")
+	)
+	(wire
+		(pts
 			(xy 161.29 68.58) (xy 175.26 68.58)
 		)
 		(stroke
@@ -1498,6 +1684,16 @@
 	)
 	(wire
 		(pts
+			(xy 101.6 111.76) (xy 101.6 95.25)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7d0d0563-4d1e-40c7-b2bc-50dae029a554")
+	)
+	(wire
+		(pts
 			(xy 170.18 83.82) (xy 170.18 80.01)
 		)
 		(stroke
@@ -1525,6 +1721,16 @@
 			(type default)
 		)
 		(uuid "866116f9-cdbc-4f0d-80f8-4037b919cba0")
+	)
+	(wire
+		(pts
+			(xy 161.29 107.95) (xy 104.14 107.95)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "88f1398f-0173-4533-ad8e-1e36011711a0")
 	)
 	(wire
 		(pts
@@ -1658,6 +1864,16 @@
 	)
 	(wire
 		(pts
+			(xy 104.14 107.95) (xy 104.14 99.06)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f8be6d13-45f8-497b-a25a-986095974fbb")
+	)
+	(wire
+		(pts
 			(xy 175.26 68.58) (xy 175.26 80.01)
 		)
 		(stroke
@@ -1665,6 +1881,17 @@
 			(type default)
 		)
 		(uuid "fdf8a71c-a4e3-4096-997d-d1b0571d80f2")
+	)
+	(hierarchical_label "GND"
+		(shape input)
+		(at 153.67 100.33 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "216595f0-fe7a-4fe2-81d0-e61cba8b70ca")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -1687,6 +1914,17 @@
 			(justify left)
 		)
 		(uuid "67b0bd64-111a-4a66-839c-55575ff5c25f")
+	)
+	(hierarchical_label "VCC"
+		(shape input)
+		(at 153.67 104.14 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "73df6240-d10e-44c2-9ba1-d33f3f242b19")
 	)
 	(hierarchical_label "GND"
 		(shape input)
@@ -1844,6 +2082,83 @@
 			(project ""
 				(path "/a469de4a-6558-4c6c-9733-dd68d37b40f4"
 					(reference "U3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "ParticulateMatters:SSD1306_128x32_0.91")
+		(at 226.06 96.52 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "21776c18-847c-4782-8a9a-30815d9e0c8a")
+		(property "Reference" "U5"
+			(at 227.33 104.7721 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "~"
+			(at 227.33 106.6772 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" ""
+			(at 226.06 96.52 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 226.06 96.52 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 226.06 96.52 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "b75f4262-733b-4869-95c3-76fd33ce4187")
+		)
+		(pin "1"
+			(uuid "a4193f3d-c6c3-45e8-b864-6dde46f68dfb")
+		)
+		(pin "3"
+			(uuid "401e62fa-b5c0-47c0-bed2-91dacc2da719")
+		)
+		(pin ""
+			(uuid "ce011a72-beca-4311-ada8-48fd86bc8786")
+		)
+		(instances
+			(project ""
+				(path "/a469de4a-6558-4c6c-9733-dd68d37b40f4"
+					(reference "U5")
 					(unit 1)
 				)
 			)
