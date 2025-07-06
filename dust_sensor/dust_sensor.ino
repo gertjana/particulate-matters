@@ -81,9 +81,6 @@ void setup() {
     debugSerial.println("-- STATUS");
     ttn.showStatus();
 
-    // Set spreading factor to SF12
-    ttn.setDataRate(SF12);
-
     debugSerial.println("-- JOIN");
     ttn.join(appEui, appKey);
 
