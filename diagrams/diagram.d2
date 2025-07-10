@@ -1,0 +1,58 @@
+direction: right
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 3
+  }
+}
+# Particulate Matters {
+#     near: top-right
+# }
+
+# Particulate Matters.box: |md
+#   A project measuring fine dust while cycling from and to work
+# |
+
+# ESP32-S3: {
+#   grid-columns: 2
+# }
+
+ESP32-S3.|md
+  Xtensa® LX7
+  dual core 240Mhz
+|
+
+DustSensor.box: |md
+  ### Bosch BMV080
+  - PM 1 µm
+  - PM 2.5 µm
+  - PM 10 µm
+|
+
+GPS Module.box: |md
+  ### ATGM336H
+  - Latitude
+  - Longitude
+  - Date / Time
+|
+
+Display.box: |md
+  **SSD1306**
+
+  128x32 OLED
+|
+
+SD Card.box: |md
+  generic
+|
+
+DustSensor <-> ESP32-S3.I2C
+GPS Module <-> ESP32-S3.UART
+ESP32-S3.I2C -> Display
+ESP32-S3.SPI <-> SD Card
+
+
+
+ESP32-S3.Wifi
+ESP32-S3.BLE
+ESP32-S3.DeepSleep
