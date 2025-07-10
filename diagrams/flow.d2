@@ -1,0 +1,17 @@
+direction: right
+vars: {
+  d2-config: {
+    layout-engine: dagre
+    theme-id: 3
+  }
+}
+
+setup.initGPS
+setup.initPM
+setup.initSDCard
+setup.initDisplay
+
+setup.direction: right
+setup -> Loop
+Loop.direction: down
+Loop.Read PM -> Loop.Read GPS -> Loop.Save SD Card -> Loop.Update Display -> Loop.Delay
