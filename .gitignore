@@ -2,4 +2,7 @@ secrets.h
 heatmap/bin/
 heatmap/lib
 heatmap/pyvenv.cfg
+
+# Kicad locks and backups
 Particulate_matters-*.zip
+*.lck
